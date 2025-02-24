@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diabetes Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            height: auto; /* Allow height to adjust based on content */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #f9f9f9;
+            color: #000;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 100%; 
+            left: 50%; 
+            margin-left: -110px; 
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .instructions {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #333;
+            text-align: left;
+        }
+
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: green;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diabetes Predictor</h1>
+        <div id="welcomeMessage"></div>
+        <form id="predictionForm">
+            <div class="tooltip">
+                <input type="text" id="pregnancies" placeholder="Pregnancies (0-17)">
+                <span class="tooltiptext">Number of times pregnant (Range: 0-17)</span>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="glucose" placeholder="Glucose (0-199)">
+                <span class="tooltiptext">Plasma glucose concentration (mg/dL)</span>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="bloodPressure" placeholder="Blood Pressure (0-122)">
+                <span class="tooltiptext">Diastolic blood pressure (mm Hg)</span>
+            </div>
+            <div class="instructions">
+                <strong>Instructions for Measuring Skin Thickness:</strong>
+                <ol>
+                    <li>Use a skinfold caliper, which can be purchased at most fitness or medical supply stores.</li>
+                    <li>Locate the triceps area on the back of your upper arm.</li>
+                    <li>Pinch the skin and underlying fat between your thumb and index finger to create a fold.</li>
+                    <li>Place the caliper jaws around the fold, about 1 cm below your fingers, and release the caliper to get a reading.</li>
+                    <li>Record the measurement in millimeters (mm).</li>
+                </ol>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="skinThickness" placeholder="Skin Thickness (0-99)">
+                <span class="tooltiptext">Triceps skinfold thickness (mm)</span>
+            </div>
+            <div class="instructions">
+                <strong>Instructions for Measuring Insulin:</strong>
+                <ol>
+                    <li>Insulin levels are typically measured through a blood test.</li>
+                    <li>Visit a healthcare provider or laboratory for a fasting blood test.</li>
+                    <li>Ensure you have fasted for at least 8 hours before the test for accurate results.</li>
+                    <li>Record the insulin level in micro-units per milliliter (mu U/mL).</li>
+                </ol>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="insulin" placeholder="Insulin (0-846)">
+                <span class="tooltiptext">2-Hour serum insulin (mu U/mL)</span>
+            </div>
+            <div class="instructions">
+                <strong>Instructions for Estimating Diabetes Pedigree Function:</strong>
+                <ol>
+                    <li>The diabetes pedigree function is a score based on family history of diabetes.</li>
+                    <li>Consider the following factors:</li>
+                    <ul>
+                        <li>Family history of diabetes (parents, siblings, grandparents).</li>
+                        <li>Age of onset of diabetes in family members.</li>
+                        <li>Other risk factors such as obesity and lifestyle.</li>
+                    </ul>
+                    <li>Estimate a score between 0.078 and 2.42 based on the above factors.</li>
+                </ol>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="diabetesPedigreeFunction" placeholder="Diabetes Pedigree Function (0.078-2.42)">
+                <span class="tooltiptext">Likelihood of diabetes based on family history</span>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="age" placeholder="Age (21-81)">
+                <span class="tooltiptext">Age of the individual (years)</span>
+            </div>
+            <div class="tooltip">
+                <input type="text" id="bmi" placeholder="BMI (kg/m²)">
+                <span class="tooltiptext">Body Mass Index (weight in kg / height in m²)</span>
+            </div>
+            <button type="button" onclick="predict()">Predict</button>
+            <p id="errorMessage" class="error"></p>
+            <p id="result" class="success"></p>
+        </form>
+    </div>
+    <script>
+        function setWelcomeMessage(username) {
+            document.getElementById('welcomeMessage').innerText = `Hey ${username}, let's predict!`;
+        }
+
+        function validateInputs() {
+            const pregnancies = parseInt(document.getElementById('pregnancies').value);
+            const glucose = parseInt(document.getElementById('glucose').value);
+            const bloodPressure = parseInt(document.getElementById('bloodPressure').value);
+            const skinThickness = parseInt(document.getElementById('skinThickness').value);
+            const insulin = parseInt(document.getElementById('insulin').value);
+            const diabetesPedigreeFunction = parseFloat(document.getElementById('diabetesPedigreeFunction').value);
+            const age = parseInt(document.getElementById('age').value);
+            const bmi = parseFloat(document.getElementById('bmi').value);
+
+            if (isNaN(pregnancies) || pregnancies < 0 || pregnancies > 17) {
+                return "Pregnancies must be between 0 and 17.";
+            }
+            if (isNaN(glucose) || glucose < 0 || glucose > 199) {
+                return "Glucose must be between 0 and 199.";
+            }
+            if (isNaN(bloodPressure) || bloodPressure < 0 || bloodPressure > 122) {
+                return "Blood Pressure must be between 0 and 122.";
+            }
+            if (isNaN(skinThickness) || skinThickness < 0 || skinThickness > 99) {
+                return "Skin Thickness must be between 0 and 99.";
+            }
+            if (isNaN(insulin) || insulin < 0 || insulin > 846) {
+                return "Insulin must be between 0 and 846.";
+            }
+            if (isNaN(diabetesPedigreeFunction) || diabetesPedigreeFunction < 0.078 || diabetesPedigreeFunction > 2.42) {
+                return "Diabetes Pedigree Function must be between 0.078 and 2.42.";
+            }
+            if (isNaN(age) || age < 21 || age > 81) {
+                return "Age must be between 21 and 81.";
+            }
+            if (isNaN(bmi) || bmi <= 0) {
+                return "BMI must be a positive number.";
+            }
+
+            return null; // No errors
+        }
+
+        function predict() {
+            const errorMessage = validateInputs();
+            if (errorMessage) {
+                document.getElementById('errorMessage').innerText = errorMessage;
+                document.getElementById('result').innerText = ''; // Clear previous result
+                return;
+            }
+
+            const pregnancies = document.getElementById('pregnancies').value;
+            const glucose = document.getElementById('glucose').value;
+            const bloodPressure = document.getElementById('bloodPressure').value;
+            const skinThickness = document.getElementById('skinThickness').value;
+            const insulin = document.getElementById('insulin').value;
+            const diabetesPedigreeFunction = document.getElementById('diabetesPedigreeFunction').value;
+            const age = document.getElementById('age').value;
+            const bmi = document.getElementById('bmi').value;
+
+            const data = {
+                features: [pregnancies, glucose, bloodPressure, skinThickness, insulin, diabetesPedigreeFunction, age, bmi]
+            };
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = data.prediction ? 'Diabetic' : 'Non-Diabetic';
+                document.getElementById('errorMessage').innerText = ''; // Clear previous error message
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('errorMessage').innerText = 'An error occurred while predicting.';
+                document.getElementById('result').innerText = ''; // Clear previous result
+            });
+        }
+
+        const username = sessionStorage.getItem('username');
+        if (username) {
+            setWelcomeMessage(username);
+        }
+    </script>
+</body>
+</html>

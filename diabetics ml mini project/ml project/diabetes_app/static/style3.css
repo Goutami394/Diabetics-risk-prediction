@@ -1,0 +1,96 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+.background {
+    background-image: url('https://asset-a.grid.id/crop/0x0:0x0/945x630/photo/2022/11/14/luka-diabetesjpg-20221114115302.jpg'); /* Direct image URL */
+    min-height: 100vh; /* Ensures the background covers the full viewport height */
+    width: 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Start from the top */
+    align-items: center;
+    position: relative;
+}
+
+.background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Dark semi-transparent overlay */
+    z-index: -1;
+}
+
+.navbar {
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.navbar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: flex-start;
+    gap: 20px; /* Adds space between the nav items */
+}
+
+.navbar ul li {
+    margin-left: 20px; /* Adds additional space between the nav items */
+}
+
+.navbar ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.navbar ul li a:hover {
+    text-decoration: underline;
+}
+
+.container {
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(20, 16, 16, 0.1);
+    text-align: center;
+    width: 80%; /* Adjust this value for width of the container */
+    max-width: 800px;
+    margin: 60px auto 0 auto; /* Centering the container horizontally and adding space from the navbar */
+    z-index: 1;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+p {
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+
+a {
+    color: #007bff;
+}
+
+a:hover {
+    color: #0056b3;
+}
